@@ -452,7 +452,10 @@
         <h3 class="text-base font-bold text-white">📷 掃描台灣電子發票 QR Code</h3>
         <p class="text-xs text-slate-400">請將鏡頭對準發票下方左右兩個 QR Code</p>
       </div>
-      <button onclick="closeScannerModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs">關閉</button>
+      <div class="flex gap-2 shrink-0">
+        <button id="scanSoundBtn" onclick="toggleScanSound()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs">🔔 提示音</button>
+        <button onclick="closeScannerModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs">關閉</button>
+      </div>
     </div>
 
     <div class="my-auto space-y-3">
@@ -2277,6 +2280,8 @@
     // ==========================================
     async function openScannerModal() {
       if (isScannerTransitioning) return;
+      unlockBeep(); // iPhone 規定聲音必須在使用者點擊時先啟用，之後掃到才能出聲
+      updateScanSoundBtn();
       scannedInvoiceData = { invNum: '', date: '', total: '', items: [], leftItems: [], rightItems: [], rightScanned: false, totalItems: 0, encoding: '' };
       document.getElementById('scanStatus').innerText = '等待掃描發票左碼（載入日期、總金額與發票號碼）...';
       document.getElementById('scannerModal').classList.remove('hidden'); document.body.classList.add('modal-open');
@@ -2396,6 +2401,62 @@
       return out;
     }
 
+    // ---- 掃描提示音 ----
+    // 讀到一個 QR 碼：「嗶」一聲；發票資料讀齊：「嗶嗶」兩聲（音調上升）。
+    // iPhone 開啟靜音模式時，網頁 App 的聲音會被系統靜音。
+    let beepCtx = null;
+    let scanSoundOn = localStorage.getItem('pl_scan_sound') !== 'off';
+
+    function unlockBeep() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!beepCtx) beepCtx = new AC();
+        if (beepCtx.state === 'suspended') beepCtx.resume();
+        // 播放一段無聲訊號，讓 iOS 解除音訊鎖定
+        const o = beepCtx.createOscillator();
+        const g = beepCtx.createGain();
+        g.gain.value = 0;
+        o.connect(g); g.connect(beepCtx.destination);
+        o.start(); o.stop(beepCtx.currentTime + 0.02);
+      } catch (e) { /* 不支援就安靜略過 */ }
+    }
+
+    function beep(freq, dur, delay = 0) {
+      if (!scanSoundOn || !beepCtx) return;
+      try {
+        if (beepCtx.state === 'suspended') beepCtx.resume();
+        const t = beepCtx.currentTime + delay;
+        const o = beepCtx.createOscillator();
+        const g = beepCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.4, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(beepCtx.destination);
+        o.start(t); o.stop(t + dur + 0.03);
+      } catch (e) { /* 忽略 */ }
+    }
+
+    function scanFeedback(kind) {
+      if (kind === 'done') { beep(988, 0.1); beep(1568, 0.18, 0.13); }
+      else beep(1318, 0.12);
+      if (navigator.vibrate) navigator.vibrate(kind === 'done' ? [30, 50, 30] : 30); // Android 才有震動
+    }
+
+    function updateScanSoundBtn() {
+      const b = document.getElementById('scanSoundBtn');
+      if (b) b.innerText = scanSoundOn ? '🔔 提示音' : '🔕 已靜音';
+    }
+
+    function toggleScanSound() {
+      scanSoundOn = !scanSoundOn;
+      try { localStorage.setItem('pl_scan_sound', scanSoundOn ? 'on' : 'off'); } catch (e) {}
+      updateScanSoundBtn();
+      if (scanSoundOn) { unlockBeep(); beep(1318, 0.1); } // 開啟時試播一聲
+    }
+
     function setScanStatus(msg) {
       document.getElementById('scanStatus').innerText = msg;
     }
@@ -2403,13 +2464,14 @@
     function handleTaiwanInvoiceQR(text) {
       if (isFinishingScan) return; // 相機每秒回呼多次，避免重複觸發開表單
       const d = scannedInvoiceData;
+      let newRead = false; // 這次是否讀到新的 QR 碼（相機會對同一個碼重複回呼）
       if (text.startsWith('**')) {
         // 右碼：「**」後接續品名:數量:單價...
         const triples = splitTriples(text.substring(2).split(':'), 0);
         if (triples.length > 0 && !d.rightScanned) {
           d.rightItems = triples;
           d.rightScanned = true;
-          if (navigator.vibrate) navigator.vibrate(30);
+          newRead = true;
         }
       } else if (/^[A-Z]{2}\d{8}\d{7}/.test(text) && text.length >= 77) {
         if (d.invNum) return; // 左碼已讀過
@@ -2428,7 +2490,7 @@
         } else {
           d.totalItems = 0;
         }
-        if (navigator.vibrate) navigator.vibrate(30);
+        newRead = true;
       } else {
         return; // 不是電子發票的 QR 碼
       }
@@ -2437,11 +2499,13 @@
       const n = d.items.length;
 
       if (!d.invNum) {
+        if (newRead) scanFeedback('step');
         setScanStatus(`✓ 已讀取右碼品項（${n} 項），請再對準「左邊」的 QR 碼讀取金額與日期`);
         return;
       }
       // 左碼已讀到：品項齊全（或發票沒有提供品項）就自動帶入；否則提示掃右碼
       const complete = d.rightScanned || d.totalItems === 0 || n >= d.totalItems;
+      if (newRead) scanFeedback(d.invNum && complete ? 'done' : 'step');
       if (complete) {
         finishScanAndOpenForm();
       } else {
