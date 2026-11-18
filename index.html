@@ -2277,7 +2277,7 @@
     // ==========================================
     async function openScannerModal() {
       if (isScannerTransitioning) return;
-      scannedInvoiceData = { invNum: '', date: '', total: '', items: [] };
+      scannedInvoiceData = { invNum: '', date: '', total: '', items: [], leftItems: [], rightItems: [], rightScanned: false, totalItems: 0, encoding: '' };
       document.getElementById('scanStatus').innerText = '等待掃描發票左碼（載入日期、總金額與發票號碼）...';
       document.getElementById('scannerModal').classList.remove('hidden'); document.body.classList.add('modal-open');
 
@@ -2314,15 +2314,68 @@
 
     let isFinishingScan = false;
 
-    // 品名編碼參數為 2 時是 Base64（UTF-8），需解碼；其他情況原樣顯示
-    function decodeInvoiceName(name, encoding) {
-      if (encoding !== '2') return name;
-      try {
-        const bytes = Uint8Array.from(atob(name), c => c.charCodeAt(0));
-        return new TextDecoder('utf-8').decode(bytes);
-      } catch (e) {
-        return name;
+    // ---- 品名解碼 ----
+    // 發票 QR 碼的「編碼參數」：0 = Big5、1 = UTF-8、2 = Base64(UTF-8)。
+    // 掃描程式不認得 Big5，會把 Big5 品名誤當成日文 Shift_JIS 或 Latin-1 解出一堆亂碼；
+    // 這裡把亂碼還原成原始位元組，再用正確的編碼重新解讀。
+    let sjisReverseMap = null;
+    function getSjisReverseMap() {
+      if (sjisReverseMap) return sjisReverseMap;
+      const dec = new TextDecoder('shift_jis');
+      const m = new Map();
+      const add = bytes => {
+        const s = dec.decode(new Uint8Array(bytes));
+        if (s.length === 1 && s !== '�' && !m.has(s)) m.set(s, bytes);
+      };
+      for (let b = 0xA1; b <= 0xDF; b++) add([b]);
+      for (let l = 0x81; l <= 0xFC; l++) {
+        if (l >= 0xA0 && l <= 0xDF) continue;
+        for (let t = 0x40; t <= 0xFC; t++) if (t !== 0x7F) add([l, t]);
       }
+      return (sjisReverseMap = m);
+    }
+
+    // 把被誤解碼的字串還原成原始位元組；無法還原時回傳 null
+    function mojibakeToBytes(s) {
+      const chars = [...s];
+      const out = [];
+      if (chars.every(ch => ch.codePointAt(0) <= 0xFF)) {
+        // 被當成 Latin-1：每個字元就是一個位元組
+        chars.forEach(ch => out.push(ch.codePointAt(0)));
+      } else {
+        // 被當成 Shift_JIS：查反向對照表
+        const rev = getSjisReverseMap();
+        for (const ch of chars) {
+          const c = ch.codePointAt(0);
+          if (c < 0x80) out.push(c);
+          else if (rev.has(ch)) out.push(...rev.get(ch));
+          else return null;
+        }
+      }
+      return new Uint8Array(out);
+    }
+
+    function looksGarbled(s) {
+      // 含 Latin-1 高位字元或半形片假名，就判斷為亂碼
+      return /[\u0080-ÿ｡-ﾟ]/.test(s);
+    }
+
+    function decodeInvoiceName(name, encoding) {
+      if (!name) return name;
+      try {
+        if (encoding === '2') {
+          const bytes = Uint8Array.from(atob(name), c => c.charCodeAt(0));
+          return new TextDecoder('utf-8').decode(bytes);
+        }
+        if ((encoding === '0' || encoding === '1') && looksGarbled(name)) {
+          const bytes = mojibakeToBytes(name);
+          if (bytes) {
+            const fixed = new TextDecoder(encoding === '0' ? 'big5' : 'utf-8').decode(bytes);
+            if (!fixed.includes('�')) return fixed;
+          }
+        }
+      } catch (e) { /* 解不出來就保留原字串 */ }
+      return name;
     }
 
     function buildInvoiceItems() {
@@ -2330,8 +2383,8 @@
       const raw = [...(scannedInvoiceData.leftItems || []), ...(scannedInvoiceData.rightItems || [])];
       const seen = new Set();
       return raw
-        .map(([name, qty, price]) => [decodeInvoiceName(name, enc), qty, price])
-        .filter(([name]) => name && !seen.has(name) && seen.add(name))
+        .map(([name, qty, price]) => [decodeInvoiceName(name.trim(), enc), qty, price])
+        .filter(([name]) => name && !/^\*+$/.test(name) && !seen.has(name) && seen.add(name))
         .map(([name, qty, price]) => `${name} x${qty} ($${price})`);
     }
 
@@ -2343,42 +2396,56 @@
       return out;
     }
 
+    function setScanStatus(msg) {
+      document.getElementById('scanStatus').innerText = msg;
+    }
+
     function handleTaiwanInvoiceQR(text) {
       if (isFinishingScan) return; // 相機每秒回呼多次，避免重複觸發開表單
+      const d = scannedInvoiceData;
       if (text.startsWith('**')) {
         // 右碼：「**」後接續品名:數量:單價...
         const triples = splitTriples(text.substring(2).split(':'), 0);
-        if (triples.length > 0) {
-          scannedInvoiceData.rightItems = triples;
-          scannedInvoiceData.items = buildInvoiceItems();
-          if (!scannedInvoiceData.invNum) {
-            document.getElementById('scanStatus').innerText = `✓ 已讀取右碼品項 (${triples.length}項)，請再掃描左碼取得金額與日期`;
-          }
+        if (triples.length > 0 && !d.rightScanned) {
+          d.rightItems = triples;
+          d.rightScanned = true;
+          if (navigator.vibrate) navigator.vibrate(30);
         }
       } else if (/^[A-Z]{2}\d{8}\d{7}/.test(text) && text.length >= 77) {
+        if (d.invNum) return; // 左碼已讀過
         // 左碼：發票號碼(10) 日期(7,民國) 隨機碼(4) 銷售額(8,16進位) 總計額(8,16進位) 買方統編(8) 賣方統編(8) 加密驗證(24)
-        const invNum = text.substring(0, 10);
         const rocYear = parseInt(text.substring(10, 13), 10) + 1911;
-        const month = text.substring(13, 15);
-        const day = text.substring(15, 17);
         const totalAmt = parseInt(text.substring(29, 37), 16);
-
-        scannedInvoiceData.invNum = invNum;
-        scannedInvoiceData.date = `${rocYear}-${month}-${day}`;
-        scannedInvoiceData.total = isNaN(totalAmt) ? '' : totalAmt.toString();
-
+        d.invNum = text.substring(0, 10);
+        d.date = `${rocYear}-${text.substring(13, 15)}-${text.substring(15, 17)}`;
+        d.total = isNaN(totalAmt) ? '' : totalAmt.toString();
         if (text.length > 77) {
           // 77 字元後：「:營業人自行使用區:本QR品項數:總品項數:編碼參數:品名:數量:單價...」
           const tail = text.substring(77).split(':');
-          scannedInvoiceData.encoding = tail[4] || '';
-          scannedInvoiceData.leftItems = splitTriples(tail, 5);
+          d.totalItems = parseInt(tail[3], 10) || 0;
+          d.encoding = (tail[4] || '').trim();
+          d.leftItems = splitTriples(tail, 5);
+        } else {
+          d.totalItems = 0;
         }
-        scannedInvoiceData.items = buildInvoiceItems();
-        document.getElementById('scanStatus').innerText = `✓ 已掃描發票 ${invNum}（金額 $${scannedInvoiceData.total}），可繼續掃右碼或直接入帳`;
+        if (navigator.vibrate) navigator.vibrate(30);
+      } else {
+        return; // 不是電子發票的 QR 碼
       }
 
-      if (scannedInvoiceData.invNum && scannedInvoiceData.items.length > 0) {
+      d.items = buildInvoiceItems();
+      const n = d.items.length;
+
+      if (!d.invNum) {
+        setScanStatus(`✓ 已讀取右碼品項（${n} 項），請再對準「左邊」的 QR 碼讀取金額與日期`);
+        return;
+      }
+      // 左碼已讀到：品項齊全（或發票沒有提供品項）就自動帶入；否則提示掃右碼
+      const complete = d.rightScanned || d.totalItems === 0 || n >= d.totalItems;
+      if (complete) {
         finishScanAndOpenForm();
+      } else {
+        setScanStatus(`✓ 已讀取發票 ${d.invNum}（$${d.total}），品項 ${n}/${d.totalItems}。\n請再對準「右邊」的 QR 碼讀取其餘品項`);
       }
     }
 
