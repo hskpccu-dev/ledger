@@ -247,8 +247,8 @@
       </div>
       <div>
         <label class="text-xs text-slate-300 block mb-1">🎯 每月總支出預算</label>
-        <input type="tel" inputmode="numeric" pattern="[0-9]*" id="budgetTotalInput" placeholder="例如 30000"
-          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-base" />
+        <input type="number" inputmode="numeric" min="0" step="1" id="budgetTotalInput" placeholder="例如 30000"
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm" />
       </div>
       <details class="rounded-xl bg-slate-900/60 border border-slate-700">
         <summary class="px-3 py-2 text-xs text-sky-400 font-bold cursor-pointer">各分類預算（選填）</summary>
@@ -279,15 +279,15 @@
       <div class="grid grid-cols-3 gap-2 text-xs">
         <div>
           <label class="text-slate-400 block mb-1">日幣 (JPY)</label>
-          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-JPY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-base" />
+          <input type="number" step="0.0001" id="rate-JPY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
         <div>
           <label class="text-slate-400 block mb-1">美金 (USD)</label>
-          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-USD" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-base" />
+          <input type="number" step="0.01" id="rate-USD" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
         <div>
           <label class="text-slate-400 block mb-1">人民幣 (CNY)</label>
-          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-CNY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-base" />
+          <input type="number" step="0.01" id="rate-CNY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
       </div>
       <button onclick="saveRates()" class="w-full py-2 rounded-xl bg-sky-600 text-white text-xs font-bold active-scale">儲存匯率設定</button>
@@ -366,12 +366,11 @@
 
       <div class="bg-slate-800/90 border border-slate-700 rounded-2xl p-3 flex justify-between items-center">
         <span id="entryCurrencyBadge" class="text-xs font-bold px-2 py-1 rounded bg-slate-700 text-sky-400">TWD</span>
-        <input type="tel" id="amountInput" inputmode="decimal" placeholder="0" autocomplete="off" oninput="updateAmountPreview()"
+        <input type="text" id="amountInput" inputmode="decimal" placeholder="0" autocomplete="off" oninput="updateAmountPreview()"
           class="bg-transparent text-right text-2xl font-extrabold text-white w-full focus:outline-none" />
       </div>
-      <!-- iPhone 的數字鍵盤（tel 鍵盤）沒有 . + − × ÷，用按鈕補上；type=tel 可確保在「加入主畫面」模式下也穩定直接彈出大型數字鍵盤 -->
-      <div class="flex items-center gap-1 -mt-1.5">
-        <button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="appendDecimalPoint()" class="calc-btn">．</button>
+      <!-- iPhone 的數字鍵盤沒有 + − × ÷，用按鈕補上 -->
+      <div class="flex items-center gap-1.5 -mt-1.5">
         <button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="appendOperator('+')" class="calc-btn">＋</button>
         <button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="appendOperator('-')" class="calc-btn">－</button>
         <button type="button" onpointerdown="event.preventDefault()" onmousedown="event.preventDefault()" onclick="appendOperator('×')" class="calc-btn">×</button>
@@ -872,8 +871,8 @@
         container.insertAdjacentHTML('beforeend', `
           <div>
             <label class="text-slate-400 block mb-0.5 truncate">${acc.name} (${acc.currency})</label>
-            <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="bal-input-${acc.id}" value="${acc.balance}"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white text-base" />
+            <input type="number" step="0.01" id="bal-input-${acc.id}" value="${acc.balance}"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white" />
           </div>
         `);
       });
@@ -1525,16 +1524,6 @@
       updateAmountPreview();
     }
 
-    function appendDecimalPoint() {
-      const el = document.getElementById('amountInput');
-      // 只在「目前這段數字」還沒有小數點時才加入（以最後一個運算符號切分）
-      const lastSegment = el.value.split(/[+\-×÷*/−]/).pop();
-      if (lastSegment.includes('.')) { el.focus(); return; }
-      el.value = (el.value || '') + '.';
-      el.focus();
-      updateAmountPreview();
-    }
-
     function backspaceAmount() {
       const el = document.getElementById('amountInput');
       el.value = el.value.slice(0, -1);
@@ -1991,8 +1980,8 @@
       box.innerHTML = Object.keys(EXPENSE_CATEGORIES).map((cat, i) => `
         <div>
           <label class="text-slate-400 block mb-0.5 truncate">${catIcon(cat)} ${esc(cat)}</label>
-          <input type="tel" inputmode="numeric" pattern="[0-9]*" data-cat-index="${i}" value="${esc((budgets.cats || {})[cat] || '')}" placeholder="不設定"
-            class="budget-cat-input w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white text-base" />
+          <input type="number" inputmode="numeric" min="0" step="1" data-cat-index="${i}" value="${esc((budgets.cats || {})[cat] || '')}" placeholder="不設定"
+            class="budget-cat-input w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white" />
         </div>`).join('');
     }
 
