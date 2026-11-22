@@ -247,7 +247,7 @@
       </div>
       <div>
         <label class="text-xs text-slate-300 block mb-1">🎯 每月總支出預算</label>
-        <input type="number" inputmode="numeric" min="0" step="1" id="budgetTotalInput" placeholder="例如 30000"
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="budgetTotalInput" placeholder="例如 30000"
           class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm" />
       </div>
       <details class="rounded-xl bg-slate-900/60 border border-slate-700">
@@ -279,15 +279,15 @@
       <div class="grid grid-cols-3 gap-2 text-xs">
         <div>
           <label class="text-slate-400 block mb-1">日幣 (JPY)</label>
-          <input type="number" step="0.0001" id="rate-JPY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-JPY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
         <div>
           <label class="text-slate-400 block mb-1">美金 (USD)</label>
-          <input type="number" step="0.01" id="rate-USD" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-USD" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
         <div>
           <label class="text-slate-400 block mb-1">人民幣 (CNY)</label>
-          <input type="number" step="0.01" id="rate-CNY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+          <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="rate-CNY" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
         </div>
       </div>
       <button onclick="saveRates()" class="w-full py-2 rounded-xl bg-sky-600 text-white text-xs font-bold active-scale">儲存匯率設定</button>
@@ -871,7 +871,7 @@
         container.insertAdjacentHTML('beforeend', `
           <div>
             <label class="text-slate-400 block mb-0.5 truncate">${acc.name} (${acc.currency})</label>
-            <input type="number" step="0.01" id="bal-input-${acc.id}" value="${acc.balance}"
+            <input type="text" inputmode="decimal" pattern="[0-9]*\.?[0-9]*" id="bal-input-${acc.id}" value="${acc.balance}"
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white" />
           </div>
         `);
@@ -1980,7 +1980,7 @@
       box.innerHTML = Object.keys(EXPENSE_CATEGORIES).map((cat, i) => `
         <div>
           <label class="text-slate-400 block mb-0.5 truncate">${catIcon(cat)} ${esc(cat)}</label>
-          <input type="number" inputmode="numeric" min="0" step="1" data-cat-index="${i}" value="${esc((budgets.cats || {})[cat] || '')}" placeholder="不設定"
+          <input type="text" inputmode="numeric" pattern="[0-9]*" data-cat-index="${i}" value="${esc((budgets.cats || {})[cat] || '')}" placeholder="不設定"
             class="budget-cat-input w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white" />
         </div>`).join('');
     }
