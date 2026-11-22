@@ -1,6 +1,6 @@
 // 私人金流帳本 Service Worker
 // 修改 index.html 後，把版本號 +1，iPhone 重開 App 就會抓到新版
-const CACHE_NAME = 'ledger-v12';
+const CACHE_NAME = 'ledger-v13';
 
 const LOCAL_FILES = [
   './',
