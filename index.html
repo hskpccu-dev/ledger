@@ -38,6 +38,9 @@
     .nav-btn.active .nav-icon { filter: none; }
     .tx-row:active { background: rgba(51, 65, 85, 0.9); }
     .calc-btn { width: 40px; height: 34px; border-radius: 10px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 20px; font-weight: 700; }
+    .lock-pad-btn { aspect-ratio: 1; border-radius: 9999px; background: #1e293b; border: 1px solid #334155; color: #fff; font-size: 24px; font-weight: 700; }
+    .lock-dot { width: 14px; height: 14px; border-radius: 9999px; border: 1.5px solid #64748b; }
+    .lock-dot.filled { background: #38bdf8; border-color: #38bdf8; }
     .calc-btn:active { background: #334155; }
     /* iOS 的日期欄位空白時會塌陷變扁，固定最小高度並靠左顯示 */
     input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 32px; display: block; }
@@ -54,6 +57,31 @@
   </style>
 </head>
 <body class="antialiased">
+
+  <!-- App 鎖定畫面：啟用後開啟/切回 App 時蓋在最上層，PIN 或 Face ID/Touch ID 解鎖後才會隱藏 -->
+  <div id="lockScreen" class="hidden fixed inset-0 z-[9999] bg-[#0f172a] flex flex-col items-center justify-center px-6" style="padding-top: var(--sat); padding-bottom: var(--sab);">
+    <div class="text-5xl mb-3">🔒</div>
+    <p class="text-sm font-bold text-white mb-1">Private Ledger 已鎖定</p>
+    <p class="text-[13.75px] text-slate-400 mb-5">請輸入 PIN 解鎖</p>
+    <div id="lockDots" class="flex gap-3 mb-5"></div>
+    <p id="lockError" class="hidden text-rose-400 text-[13.75px] font-bold mb-3">PIN 不正確，請再試一次</p>
+    <button id="lockFaceIdBtn" onclick="tryUnlockWithWebAuthn()" class="hidden mb-4 px-4 py-2 rounded-xl bg-sky-600 text-white text-xs font-bold active-scale">🆔 使用 Face ID / Touch ID 解鎖</button>
+    <div class="grid grid-cols-3 gap-3 w-full max-w-[280px]">
+      <button onclick="lockPadInput('1')" class="lock-pad-btn">1</button>
+      <button onclick="lockPadInput('2')" class="lock-pad-btn">2</button>
+      <button onclick="lockPadInput('3')" class="lock-pad-btn">3</button>
+      <button onclick="lockPadInput('4')" class="lock-pad-btn">4</button>
+      <button onclick="lockPadInput('5')" class="lock-pad-btn">5</button>
+      <button onclick="lockPadInput('6')" class="lock-pad-btn">6</button>
+      <button onclick="lockPadInput('7')" class="lock-pad-btn">7</button>
+      <button onclick="lockPadInput('8')" class="lock-pad-btn">8</button>
+      <button onclick="lockPadInput('9')" class="lock-pad-btn">9</button>
+      <div></div>
+      <button onclick="lockPadInput('0')" class="lock-pad-btn">0</button>
+      <button onclick="lockPadBackspace()" class="lock-pad-btn">⌫</button>
+    </div>
+    <p class="text-[12.5px] text-slate-500 mt-6 text-center leading-relaxed">忘記 PIN？需要到 iPhone「設定 → Safari → 進階 → 網站資料」清除本網站資料才能解除鎖定，這會連同帳本資料一起清除，請務必先在「設定」頁下載 JSON 備份。</p>
+  </div>
 
   <!-- 頂部狀態列 -->
   <header class="app-header px-4 pb-3 mb-1 flex justify-between items-end sticky top-0 z-20 bg-[#0f172a]/95 backdrop-blur-md">
@@ -293,15 +321,38 @@
       <button onclick="saveRates()" class="w-full py-2 rounded-xl bg-sky-600 text-white text-xs font-bold active-scale">儲存匯率設定</button>
     </div>
 
-    <!-- 各帳戶餘額手動校正 -->
+    <!-- 各帳戶管理：改名、改類別、改餘額、刪除、新增 -->
     <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
-        <h3 class="text-sm font-bold text-white">6. 帳戶初始餘額 / 對帳校正</h3>
+        <h3 class="text-sm font-bold text-white">6. 帳戶管理 / 初始餘額</h3>
         <span class="text-[12.5px] text-slate-400">信用卡請填目前未繳金額</span>
       </div>
-      <p class="text-[12.5px] text-slate-500 -mt-1">下方每個帳戶也可以直接改選所屬類別（現金／銀行帳戶／信用卡／電子支付）。</p>
+      <p class="text-[12.5px] text-slate-500 -mt-1">每個帳戶都可以直接改名、改類別、改餘額；下方也能新增或刪除帳戶。</p>
       <div id="accountBalanceInputs" class="grid grid-cols-2 gap-2 text-xs"></div>
-      <button onclick="saveAccountBalances()" class="w-full py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold active-scale">更新所有帳戶餘額與類別</button>
+      <button onclick="saveAccountBalances()" class="w-full py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold active-scale">更新所有帳戶資料</button>
+
+      <div class="pt-3 border-t border-slate-700/60 space-y-2">
+        <h4 class="text-[13.75px] font-bold text-slate-300">＋ 新增帳戶</h4>
+        <input type="text" id="newAccName" placeholder="帳戶名稱（例如：永豐銀行）"
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+        <div class="grid grid-cols-2 gap-2">
+          <select id="newAccGroup" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 text-xs">
+            <option value="現金">現金</option>
+            <option value="銀行帳戶" selected>銀行帳戶</option>
+            <option value="信用卡">信用卡</option>
+            <option value="電子支付">電子支付</option>
+          </select>
+          <select id="newAccCurrency" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-300 text-xs">
+            <option value="TWD" selected>TWD</option>
+            <option value="JPY">JPY</option>
+            <option value="USD">USD</option>
+            <option value="CNY">CNY</option>
+          </select>
+        </div>
+        <input type="number" step="0.01" id="newAccBalance" placeholder="起始餘額（可留空＝0）"
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-xs" />
+        <button onclick="addNewAccount()" class="w-full py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold active-scale">新增帳戶</button>
+      </div>
     </div>
 
     <!-- 全帳本匯出與備份還原 -->
@@ -313,6 +364,30 @@
         <label class="text-[13.75px] text-slate-400 block mb-1.5">從 JSON 備份檔還原資料：</label>
         <input type="file" id="importJsonFile" accept=".json,application/json" onchange="importJSON(event)"
           class="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950" />
+      </div>
+    </div>
+
+    <!-- App 鎖定（隱私保護） -->
+    <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-2.5">
+      <h3 class="text-sm font-bold text-white">8. App 鎖定（隱私保護）</h3>
+      <div id="lockOffPanel">
+        <p class="text-[13.75px] text-slate-400 mb-2">開啟後，打開 App 或從背景切回來都需要輸入 PIN 才能看到帳本內容。</p>
+        <button onclick="openSetPinFlow()" class="w-full py-2.5 rounded-xl bg-sky-600 text-white text-xs font-bold active-scale">🔒 設定 PIN 並開啟鎖定</button>
+      </div>
+      <div id="lockOnPanel" class="hidden space-y-2">
+        <p class="text-[13.75px] text-emerald-400">✓ App 鎖定已開啟</p>
+        <button onclick="setupWebAuthnFaceId()" id="setupFaceIdBtn" class="w-full py-2.5 rounded-xl bg-slate-700 text-slate-200 text-xs font-bold active-scale">🆔 設定 Face ID / Touch ID 快速解鎖（選用）</button>
+        <p id="faceIdStatus" class="hidden text-[12.5px] text-emerald-400">✓ 已設定 Face ID / Touch ID 快速解鎖</p>
+        <button onclick="openSetPinFlow()" class="w-full py-2 rounded-xl bg-slate-700 text-slate-200 text-xs font-bold active-scale">更改 PIN</button>
+        <button onclick="disableAppLock()" class="w-full py-2 rounded-xl bg-rose-900/60 border border-rose-800 text-rose-300 text-xs font-bold active-scale">關閉 App 鎖定</button>
+      </div>
+      <!-- 設定/更改 PIN 用的小表單 -->
+      <div id="setPinForm" class="hidden pt-2 border-t border-slate-700/60 space-y-2">
+        <input type="password" inputmode="numeric" pattern="[0-9]*" id="setPinInput1" maxlength="6" placeholder="設定 4-6 位數字 PIN"
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm tracking-widest" />
+        <input type="password" inputmode="numeric" pattern="[0-9]*" id="setPinInput2" maxlength="6" placeholder="再輸入一次確認"
+          class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white text-sm tracking-widest" />
+        <button onclick="confirmSetPin()" class="w-full py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold active-scale">確認</button>
       </div>
     </div>
   </main>
@@ -883,6 +958,7 @@
       renderBudgetSettings();
       renderRecurringSettings();
       renderTemplateSettings();
+      renderLockSettingsPanel();
       document.getElementById('rate-JPY').value = rates.JPY;
       document.getElementById('rate-USD').value = rates.USD;
       document.getElementById('rate-CNY').value = rates.CNY;
@@ -893,13 +969,16 @@
       accounts.forEach(acc => {
         container.insertAdjacentHTML('beforeend', `
           <div>
-            <label class="text-slate-400 block mb-0.5 truncate">${acc.name} (${acc.currency})</label>
+            <label class="text-slate-400 block mb-0.5">${acc.currency}</label>
+            <input type="text" id="name-input-${acc.id}" value="${esc(acc.name)}"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white font-bold mb-1" />
             <input type="number" step="0.01" id="bal-input-${acc.id}" value="${acc.balance}"
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 text-white" />
             <select id="grp-input-${acc.id}"
               class="w-full bg-slate-900 border border-slate-700 rounded-lg p-1.5 mt-1 text-slate-300">
               ${ACCOUNT_GROUPS.map(g => `<option value="${g}" ${g === acc.group ? 'selected' : ''}>${g}</option>`).join('')}
             </select>
+            <button onclick="deleteAccount('${acc.id}')" class="w-full mt-1 py-1 rounded-lg bg-rose-900/60 border border-rose-800 text-rose-300 text-[12.5px] font-bold active-scale">🗑 刪除此帳戶</button>
           </div>
         `);
       });
@@ -907,6 +986,17 @@
 
     function saveAccountBalances() {
       accounts.forEach(acc => {
+        const nameEl = document.getElementById(`name-input-${acc.id}`);
+        if (nameEl && nameEl.value.trim() !== '') {
+          const newName = nameEl.value.trim();
+          if (newName !== acc.name) {
+            transactions.forEach(t => {
+              if (t.accountId === acc.id) t.accountName = newName;
+              if (t.targetAccountId === acc.id) t.targetAccountName = newName;
+            });
+            acc.name = newName;
+          }
+        }
         const el = document.getElementById(`bal-input-${acc.id}`);
         if (el && el.value !== '') {
           acc.balance = new Decimal(el.value || 0).toDecimalPlaces(2).toString();
@@ -918,7 +1008,44 @@
       });
       persistData();
       renderDashboard();
-      alert('所有帳戶餘額已更新！');
+      renderEntryMenus();
+      alert('所有帳戶資料已更新！');
+    }
+
+    function addNewAccount() {
+      const name = document.getElementById('newAccName').value.trim();
+      if (!name) { alert('請輸入帳戶名稱'); return; }
+      const group = document.getElementById('newAccGroup').value;
+      const currency = document.getElementById('newAccCurrency').value;
+      const balanceRaw = document.getElementById('newAccBalance').value;
+      const balance = balanceRaw === '' ? '0' : new Decimal(balanceRaw || 0).toDecimalPlaces(2).toString();
+      accounts.push({ id: newId('acc'), name, group, currency, balance });
+      persistData();
+      document.getElementById('newAccName').value = '';
+      document.getElementById('newAccBalance').value = '';
+      renderSettingsTab();
+      renderDashboard();
+      renderEntryMenus();
+      showToast(`✅ 已新增帳戶「${name}」`);
+    }
+
+    function deleteAccount(id) {
+      const acc = accounts.find(a => a.id === id);
+      if (!acc) return;
+      if (accounts.length <= 1) { alert('至少要保留一個帳戶，無法刪除最後一個帳戶。'); return; }
+      const refCount = transactions.filter(t => t.accountId === id || t.targetAccountId === id).length;
+      const balNote = new Decimal(acc.balance || 0).isZero() ? '' : `\n\n⚠️ 這個帳戶目前還有餘額 ${formatMoney(acc.balance, acc.currency)}，刪除後這筆餘額不會轉移到其他帳戶。`;
+      const txNote = refCount > 0 ? `\n\n這個帳戶有 ${refCount} 筆相關的歷史交易紀錄，刪除帳戶後這些紀錄仍會保留（金額、日期不變），但不會再顯示為可選帳戶。` : '';
+      if (!confirm(`確定要刪除帳戶「${acc.name}」嗎？${balNote}${txNote}`)) return;
+      accounts = accounts.filter(a => a.id !== id);
+      // 刪除的剛好是目前記帳畫面選取中的帳戶時，改選第一個帳戶避免找不到而當機
+      if (!accounts.some(a => a.id === selectedAccountId)) selectedAccountId = accounts[0].id;
+      if (!accounts.some(a => a.id === selectedTargetAccountId)) selectedTargetAccountId = accounts[0].id;
+      persistData();
+      renderSettingsTab();
+      renderDashboard();
+      renderEntryMenus();
+      showToast(`🗑 已刪除帳戶「${acc.name}」`);
     }
 
     function renderDashboard() {
@@ -2549,16 +2676,178 @@
       if (!document.getElementById('tab-stats').classList.contains('hidden')) runCrossAnalysis();
     });
 
+    // ==========================================
+    // App 鎖定（PIN + 選用 Face ID / Touch ID）
+    // 純本機、沒有伺服器可驗證，只做「嚇阻隨意偷看」用途，不是金庫等級的安全機制。
+    // ==========================================
+    let lockPadBuffer = '';
+    let lockIsArmed = false; // true＝目前畫面上蓋著鎖定畫面，需要解鎖
+
+    function isLockEnabled() { return localStorage.getItem('pl_lock_enabled') === '1'; }
+
+    async function sha256Hex(str) {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function renderLockSettingsPanel() {
+      const on = isLockEnabled();
+      document.getElementById('lockOffPanel').classList.toggle('hidden', on);
+      document.getElementById('lockOnPanel').classList.toggle('hidden', !on);
+      document.getElementById('setPinForm').classList.add('hidden');
+      document.getElementById('setPinInput1').value = '';
+      document.getElementById('setPinInput2').value = '';
+      const hasFaceId = !!localStorage.getItem('pl_lock_webauthn_cred_id');
+      document.getElementById('faceIdStatus').classList.toggle('hidden', !hasFaceId);
+      document.getElementById('setupFaceIdBtn').textContent = hasFaceId
+        ? '🆔 重新設定 Face ID / Touch ID'
+        : '🆔 設定 Face ID / Touch ID 快速解鎖（選用）';
+      if (!(window.PublicKeyCredential)) {
+        document.getElementById('setupFaceIdBtn').classList.add('hidden');
+      }
+    }
+
+    function openSetPinFlow() {
+      document.getElementById('setPinForm').classList.remove('hidden');
+      document.getElementById('setPinInput1').value = '';
+      document.getElementById('setPinInput2').value = '';
+      document.getElementById('setPinInput1').focus();
+    }
+
+    async function confirmSetPin() {
+      const p1 = document.getElementById('setPinInput1').value.trim();
+      const p2 = document.getElementById('setPinInput2').value.trim();
+      if (!/^\d{4,6}$/.test(p1)) { alert('PIN 請輸入 4-6 位數字'); return; }
+      if (p1 !== p2) { alert('兩次輸入的 PIN 不一致，請重新輸入'); return; }
+      const hash = await sha256Hex(p1);
+      localStorage.setItem('pl_lock_pin_hash', hash);
+      localStorage.setItem('pl_lock_pin_len', String(p1.length));
+      localStorage.setItem('pl_lock_enabled', '1');
+      renderLockSettingsPanel();
+      showToast('🔒 App 鎖定已開啟');
+    }
+
+    function disableAppLock() {
+      if (!confirm('確定要關閉 App 鎖定嗎？之後打開 App 不需要 PIN 就能看到帳本內容。')) return;
+      localStorage.removeItem('pl_lock_enabled');
+      localStorage.removeItem('pl_lock_pin_hash');
+      localStorage.removeItem('pl_lock_webauthn_cred_id');
+      renderLockSettingsPanel();
+      showToast('已關閉 App 鎖定');
+    }
+
+    // 選用：用 WebAuthn 平台驗證器（iOS/Mac 上就是 Face ID 或 Touch ID）註冊一把「本機鑰匙」。
+    // 這裡沒有伺服器，純粹用「瀏覽器是否成功做完生物辨識」當作解鎖依據，安全性等同裝置本身的 Face ID/Touch ID 保護。
+    async function setupWebAuthnFaceId() {
+      if (!window.PublicKeyCredential) { alert('這個瀏覽器不支援 Face ID / Touch ID 快速解鎖，請使用 PIN。'); return; }
+      try {
+        const challenge = crypto.getRandomValues(new Uint8Array(32));
+        const userId = crypto.getRandomValues(new Uint8Array(16));
+        const cred = await navigator.credentials.create({
+          publicKey: {
+            challenge,
+            rp: { name: 'Private Ledger' },
+            user: { id: userId, name: 'ledger-user', displayName: '記帳 App' },
+            pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+            authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+            timeout: 60000,
+          }
+        });
+        if (!cred) throw new Error('no credential');
+        const credIdB64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+        localStorage.setItem('pl_lock_webauthn_cred_id', credIdB64);
+        renderLockSettingsPanel();
+        showToast('✓ 已設定 Face ID / Touch ID 快速解鎖');
+      } catch (e) {
+        alert('設定失敗或已取消，仍可以用 PIN 解鎖。');
+      }
+    }
+
+    async function tryUnlockWithWebAuthn() {
+      const credIdB64 = localStorage.getItem('pl_lock_webauthn_cred_id');
+      if (!credIdB64 || !window.PublicKeyCredential) return;
+      try {
+        const challenge = crypto.getRandomValues(new Uint8Array(32));
+        const rawId = Uint8Array.from(atob(credIdB64), c => c.charCodeAt(0));
+        const assertion = await navigator.credentials.get({
+          publicKey: {
+            challenge,
+            allowCredentials: [{ id: rawId, type: 'public-key' }],
+            userVerification: 'required',
+            timeout: 60000,
+          }
+        });
+        if (assertion) unlockApp();
+      } catch (e) {
+        // 使用者取消或驗證失敗，留在鎖定畫面用 PIN 解鎖即可，不用額外跳警告干擾
+      }
+    }
+
+    function showLockScreen() {
+      if (!isLockEnabled()) return;
+      lockIsArmed = true;
+      lockPadBuffer = '';
+      renderLockDots();
+      document.getElementById('lockError').classList.add('hidden');
+      document.getElementById('lockScreen').classList.remove('hidden');
+      const hasFaceId = !!localStorage.getItem('pl_lock_webauthn_cred_id');
+      const faceIdBtn = document.getElementById('lockFaceIdBtn');
+      faceIdBtn.classList.toggle('hidden', !hasFaceId);
+      if (hasFaceId) tryUnlockWithWebAuthn(); // 一出現鎖定畫面就先主動嘗試一次生物辨識，成功的話免手動點按鈕
+    }
+
+    function unlockApp() {
+      lockIsArmed = false;
+      lockPadBuffer = '';
+      document.getElementById('lockScreen').classList.add('hidden');
+    }
+
+    function renderLockDots() {
+      const box = document.getElementById('lockDots');
+      box.innerHTML = '';
+      const expectedLen = Number(localStorage.getItem('pl_lock_pin_len')) || 6;
+      for (let i = 0; i < expectedLen; i++) {
+        box.insertAdjacentHTML('beforeend', `<div class="lock-dot${i < lockPadBuffer.length ? ' filled' : ''}"></div>`);
+      }
+    }
+
+    async function lockPadInput(d) {
+      const expectedLen = Number(localStorage.getItem('pl_lock_pin_len')) || 6;
+      if (lockPadBuffer.length >= expectedLen) return;
+      lockPadBuffer += d;
+      renderLockDots();
+      document.getElementById('lockError').classList.add('hidden');
+      if (lockPadBuffer.length < expectedLen) return;
+      const hash = await sha256Hex(lockPadBuffer);
+      if (hash === localStorage.getItem('pl_lock_pin_hash')) {
+        unlockApp();
+      } else {
+        document.getElementById('lockError').classList.remove('hidden');
+        lockPadBuffer = '';
+        renderLockDots();
+      }
+    }
+
+    function lockPadBackspace() {
+      lockPadBuffer = lockPadBuffer.slice(0, -1);
+      renderLockDots();
+    }
+
     // 初始化畫面
     renderDashboard();
     renderTransactions();
     processRecurrings();
-    // App 從背景切回來時（可能已跨日），再檢查一次固定收支並更新畫面
+    if (isLockEnabled()) showLockScreen();
+    // App 從背景切回來時（可能已跨日），再檢查一次固定收支並更新畫面；
+    // 切到背景時立刻蓋上鎖定畫面（含切到背景的瞬間），避免多工畫面預覽被偷看到金額
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         processRecurrings();
         renderDashboard();
         renderTransactions();
+        if (isLockEnabled()) showLockScreen();
+      } else if (document.visibilityState === 'hidden') {
+        if (isLockEnabled()) showLockScreen();
       }
     });
 
