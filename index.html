@@ -2612,15 +2612,52 @@
       triggerFileDownload(blob, `全部歷史財務流水帳_${getLocalDateStr()}.csv`);
     }
 
-    function exportJSON() {
-      const dataStr = JSON.stringify({
+    function buildBackupJSONString() {
+      return JSON.stringify({
         accounts, transactions, rates,
         categories: { expense: EXPENSE_CATEGORIES, income: INCOME_CATEGORIES, transfer: TRANSFER_CATEGORIES },
         catIcons: customIcons,
         budgets, recurrings, templates
       }, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
+    }
+
+    function exportJSON() {
+      const blob = new Blob([buildBackupJSONString()], { type: 'application/json' });
       triggerFileDownload(blob, `財務系統完整備份_${getLocalDateStr()}.json`);
+    }
+
+    // ==========================================
+    // 每週自動備份（App 開啟/切回前景時偵測）
+    // 距離上次自動備份 ≥ 7 天時，自動（不需任何點擊）下載一份 JSON 備份檔。
+    // 若 iPhone 已將 Safari「下載項目」位置設為「iCloud 雲碟」，此檔會自動存入 iCloud。
+    // ==========================================
+    const AUTO_BACKUP_KEY = 'pl_last_auto_backup_ts';
+    const AUTO_BACKUP_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+    function autoWeeklyBackupCheck() {
+      const lastTs = parseInt(localStorage.getItem(AUTO_BACKUP_KEY) || '0', 10);
+      const now = Date.now();
+      if (!lastTs) {
+        // 第一次啟用此功能，先記錄基準時間，不立即觸發下載，避免嚇到使用者
+        localStorage.setItem(AUTO_BACKUP_KEY, String(now));
+        return;
+      }
+      if (now - lastTs < AUTO_BACKUP_INTERVAL_MS) return;
+      try {
+        const blob = new Blob([buildBackupJSONString()], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `自動備份_${getLocalDateStr()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast('✓ 已自動產生本週備份檔（JSON）');
+      } catch (err) {
+        // 自動備份失敗不影響正常使用，靜默忽略，下次開啟App再試
+      } finally {
+        localStorage.setItem(AUTO_BACKUP_KEY, String(now));
+      }
     }
 
     function importJSON(event) {
@@ -2838,6 +2875,7 @@
     renderTransactions();
     processRecurrings();
     if (isLockEnabled()) showLockScreen();
+    autoWeeklyBackupCheck();
     // App 從背景切回來時（可能已跨日），再檢查一次固定收支並更新畫面；
     // 切到背景時立刻蓋上鎖定畫面（含切到背景的瞬間），避免多工畫面預覽被偷看到金額
     document.addEventListener('visibilitychange', () => {
@@ -2846,6 +2884,7 @@
         renderDashboard();
         renderTransactions();
         if (isLockEnabled()) showLockScreen();
+        autoWeeklyBackupCheck();
       } else if (document.visibilityState === 'hidden') {
         if (isLockEnabled()) showLockScreen();
       }
