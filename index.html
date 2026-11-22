@@ -32,12 +32,12 @@
     .glass { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
     .active-scale:active { transform: scale(0.96); transition: transform 0.1s; }
     .app-header { padding-top: calc(var(--sat) + 6px); }
-    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 2px; color: #64748b; font-size: 10px; font-weight: 600; }
-    .nav-btn .nav-icon { font-size: 21px; line-height: 1; filter: grayscale(1) opacity(0.6); }
+    .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 2px; color: #64748b; font-size: 12.5px; font-weight: 600; }
+    .nav-btn .nav-icon { font-size: 26.25px; line-height: 1; filter: grayscale(1) opacity(0.6); }
     .nav-btn.active { color: #38bdf8; }
     .nav-btn.active .nav-icon { filter: none; }
     .tx-row:active { background: rgba(51, 65, 85, 0.9); }
-    .calc-btn { width: 40px; height: 34px; border-radius: 10px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 16px; font-weight: 700; }
+    .calc-btn { width: 40px; height: 34px; border-radius: 10px; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; font-size: 20px; font-weight: 700; }
     .calc-btn:active { background: #334155; }
     /* iOS 的日期欄位空白時會塌陷變扁，固定最小高度並靠左顯示 */
     input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 32px; display: block; }
@@ -58,7 +58,7 @@
   <!-- 頂部狀態列 -->
   <header class="app-header px-4 pb-3 mb-1 flex justify-between items-end sticky top-0 z-20 bg-[#0f172a]/95 backdrop-blur-md">
     <div>
-      <p class="text-[11px] text-slate-400 tracking-wider">PRIVATE LEDGER</p>
+      <p class="text-[13.75px] text-slate-400 tracking-wider">PRIVATE LEDGER</p>
       <h1 id="pageTitle" class="text-xl font-bold text-white">每日財務帳本</h1>
     </div>
     <button onclick="togglePrivacy()" id="privacyBtn" aria-label="隱藏或顯示金額"
@@ -77,22 +77,22 @@
       <!-- 本月收支（不需設定預算即可顯示） -->
       <div class="mt-3 grid grid-cols-3 gap-2">
         <div class="rounded-xl bg-slate-900/70 border border-slate-700/70 px-2.5 py-2">
-          <span id="monthLabel" class="text-[10px] text-slate-400 block">本月收入</span>
+          <span id="monthLabel" class="text-[12.5px] text-slate-400 block">本月收入</span>
           <div id="monthIncomeDisplay" class="text-sm font-extrabold text-emerald-400 mt-0.5 truncate">$0</div>
         </div>
         <div class="rounded-xl bg-slate-900/70 border border-slate-700/70 px-2.5 py-2">
-          <span class="text-[10px] text-slate-400 block">本月支出</span>
+          <span class="text-[12.5px] text-slate-400 block">本月支出</span>
           <div id="monthExpenseDisplay" class="text-sm font-extrabold text-rose-400 mt-0.5 truncate">$0</div>
         </div>
         <div class="rounded-xl bg-slate-900/70 border border-slate-700/70 px-2.5 py-2">
-          <span class="text-[10px] text-slate-400 block">本月結餘</span>
+          <span class="text-[12.5px] text-slate-400 block">本月結餘</span>
           <div id="monthNetDisplay" class="text-sm font-extrabold text-sky-400 mt-0.5 truncate">$0</div>
         </div>
       </div>
       <div class="mt-4 pt-3 border-t border-slate-700/60">
         <div class="flex justify-between items-center mb-2">
           <span class="text-xs font-medium text-slate-400">各帳戶即時餘額 / 未繳卡費</span>
-          <span class="text-[11px] text-slate-500">左右滑動查看 →</span>
+          <span class="text-[13.75px] text-slate-500">左右滑動查看 →</span>
         </div>
         <div id="accountCards" class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1"></div>
       </div>
@@ -105,7 +105,7 @@
     <section id="templateBar" class="hidden space-y-1.5">
       <div class="flex justify-between items-center px-1">
         <h2 class="text-xs font-bold text-slate-300">⚡ 常用記帳（點一下就記今天）</h2>
-        <button onclick="openTab('settings');setTimeout(()=>document.getElementById('templateSection').scrollIntoView({behavior:'smooth'}),50)" class="text-[11px] text-slate-500">管理</button>
+        <button onclick="openTab('settings');setTimeout(()=>document.getElementById('templateSection').scrollIntoView({behavior:'smooth'}),50)" class="text-[13.75px] text-slate-500">管理</button>
       </div>
       <div id="templateChips" class="flex gap-2 overflow-x-auto no-scrollbar pb-1"></div>
     </section>
@@ -138,11 +138,11 @@
     <details class="rounded-2xl bg-slate-800/90 border border-slate-700 overflow-hidden">
       <summary class="px-4 py-3 text-xs font-bold text-sky-400 flex justify-between items-center cursor-pointer bg-slate-800">
         <span>🎛️ 進階篩選（自訂日期 / 帳戶 / 分類 / 關鍵字）</span>
-        <span class="text-[10px] text-slate-400">展開 ▾</span>
+        <span class="text-[12.5px] text-slate-400">展開 ▾</span>
       </summary>
       <div class="p-3.5 pt-2 space-y-3 border-t border-slate-700/60">
         <div>
-          <label class="text-[11px] text-slate-400 block mb-1.5">自訂日期區間</label>
+          <label class="text-[13.75px] text-slate-400 block mb-1.5">自訂日期區間</label>
           <div class="grid grid-cols-2 gap-2">
             <input type="date" id="statStartDate" onchange="clearPresetHighlight();runCrossAnalysis()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white" />
             <input type="date" id="statEndDate" onchange="clearPresetHighlight();runCrossAnalysis()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white" />
@@ -191,7 +191,7 @@
     <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 space-y-2">
       <div class="flex justify-between items-center">
         <h3 class="text-xs font-bold text-white">📈 收支現金流趨勢圖</h3>
-        <span id="trendGranularityBadge" class="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-slate-400">按日統計</span>
+        <span id="trendGranularityBadge" class="text-[12.5px] px-2 py-0.5 rounded bg-slate-900 text-slate-400">按日統計</span>
       </div>
       <div class="relative h-48 w-full">
         <canvas id="trendChart"></canvas>
@@ -202,7 +202,7 @@
     <div class="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
         <h3 id="doughnutTitle" class="text-xs font-bold text-white">🍩 支出分類結構</h3>
-        <span class="text-[10px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">說明欄關鍵字已自動合併</span>
+        <span class="text-[12.5px] text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800/50">說明欄關鍵字已自動合併</span>
       </div>
       <div class="relative h-52 w-full flex items-center justify-center">
         <canvas id="categoryDoughnutChart"></canvas>
@@ -215,7 +215,7 @@
     <div class="space-y-2">
       <div class="flex justify-between items-center px-1">
         <h3 class="text-xs font-bold text-slate-300">🧾 符合條件的交易明細</h3>
-        <span id="statMatchCount" class="text-[11px] text-slate-400">0 筆</span>
+        <span id="statMatchCount" class="text-[13.75px] text-slate-400">0 筆</span>
       </div>
       <div id="statMatchList" class="space-y-2"></div>
     </div>
@@ -227,7 +227,7 @@
     <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-bold text-white">1. 分類與細項管理</h3>
-        <button onclick="resetCategories()" class="text-[11px] text-slate-400 underline">還原預設</button>
+        <button onclick="resetCategories()" class="text-[13.75px] text-slate-400 underline">還原預設</button>
       </div>
       <div class="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
         <button id="catMgrBtn-expense" onclick="setCatMgrType('expense')" class="py-1.5 rounded-lg text-xs font-bold">支出分類</button>
@@ -235,7 +235,7 @@
         <button id="catMgrBtn-transfer" onclick="setCatMgrType('transfer')" class="py-1.5 rounded-lg text-xs font-bold">轉帳分類</button>
       </div>
       <button onclick="addMainCat()" class="w-full py-2.5 rounded-xl bg-sky-500/15 border border-dashed border-sky-500/70 text-sky-400 text-sm font-bold active-scale">＋ 新增主分類</button>
-      <p class="text-[11px] text-slate-400 leading-relaxed">點圖示可換 emoji；點細項可改名，點 ✕ 刪除。改名時，過去的紀錄會一併更新；刪除則不影響過去的紀錄。</p>
+      <p class="text-[13.75px] text-slate-400 leading-relaxed">點圖示可換 emoji；點細項可改名，點 ✕ 刪除。改名時，過去的紀錄會一併更新；刪除則不影響過去的紀錄。</p>
       <div id="categoryManager" class="space-y-2.5"></div>
     </div>
 
@@ -243,7 +243,7 @@
     <div id="budgetSection" class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-bold text-white">2. 每月預算</h3>
-        <span class="text-[10px] text-slate-400">以台幣計，留空代表不設定</span>
+        <span class="text-[12.5px] text-slate-400">以台幣計，留空代表不設定</span>
       </div>
       <div>
         <label class="text-xs text-slate-300 block mb-1">🎯 每月總支出預算</label>
@@ -262,14 +262,14 @@
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-bold text-white">3. 🔁 固定收支（每月自動記帳）</h3>
       </div>
-      <p class="text-[11px] text-slate-400 leading-relaxed">記帳時勾選「🔁 每月固定」即可新增。每月到了那一天，打開 App 時會自動記入；幾個月沒開也會自動補記。</p>
+      <p class="text-[13.75px] text-slate-400 leading-relaxed">記帳時勾選「🔁 每月固定」即可新增。每月到了那一天，打開 App 時會自動記入；幾個月沒開也會自動補記。</p>
       <div id="recurringList" class="space-y-2"></div>
     </div>
 
     <!-- 常用記帳 -->
     <div id="templateSection" class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-3">
       <h3 class="text-sm font-bold text-white">4. ⭐ 常用記帳（首頁一鍵記帳）</h3>
-      <p class="text-[11px] text-slate-400 leading-relaxed">記帳時勾選「⭐ 加入常用」即可新增。在首頁點一下按鈕就會記入今天，記錯了可以按「復原」。</p>
+      <p class="text-[13.75px] text-slate-400 leading-relaxed">記帳時勾選「⭐ 加入常用」即可新增。在首頁點一下按鈕就會記入今天，記錯了可以按「復原」。</p>
       <div id="templateList" class="space-y-2"></div>
     </div>
 
@@ -297,7 +297,7 @@
     <div class="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="text-sm font-bold text-white">6. 帳戶初始餘額 / 對帳校正</h3>
-        <span class="text-[10px] text-slate-400">信用卡請填目前未繳金額</span>
+        <span class="text-[12.5px] text-slate-400">信用卡請填目前未繳金額</span>
       </div>
       <div id="accountBalanceInputs" class="grid grid-cols-2 gap-2 text-xs"></div>
       <button onclick="saveAccountBalances()" class="w-full py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold active-scale">更新所有帳戶餘額</button>
@@ -309,7 +309,7 @@
       <button onclick="exportAllCSV()" class="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-bold active-scale">📥 匯出全部歷史流水帳 (Excel CSV)</button>
       <button onclick="exportJSON()" class="w-full py-2.5 rounded-xl bg-slate-700 text-slate-200 text-xs font-bold active-scale">💾 下載完整系統備份檔 (JSON)</button>
       <div class="pt-2 border-t border-slate-700/60">
-        <label class="text-[11px] text-slate-400 block mb-1.5">從 JSON 備份檔還原資料：</label>
+        <label class="text-[13.75px] text-slate-400 block mb-1.5">從 JSON 備份檔還原資料：</label>
         <input type="file" id="importJsonFile" accept=".json,application/json" onchange="importJSON(event)"
           class="w-full text-xs text-slate-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-slate-950" />
       </div>
@@ -386,8 +386,8 @@
 
       <div id="subCategorySection" class="hidden bg-slate-800/60 p-2.5 rounded-xl border border-slate-700/70">
         <div class="flex justify-between items-center mb-1.5">
-          <label class="text-[11px] text-sky-400 font-medium">細項（選填）</label>
-          <button onclick="clearSubCategory()" class="text-[11px] text-slate-400 underline">不選細項</button>
+          <label class="text-[13.75px] text-sky-400 font-medium">細項（選填）</label>
+          <button onclick="clearSubCategory()" class="text-[13.75px] text-slate-400 underline">不選細項</button>
         </div>
         <div id="subCategoryChips" class="flex flex-wrap gap-1.5"></div>
       </div>
@@ -419,11 +419,11 @@
       <div id="entryOptions" class="grid grid-cols-2 gap-2">
         <label class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">
           <input type="checkbox" id="optRecurring" class="w-4 h-4 accent-sky-500" />
-          <span>🔁 每月固定<span class="block text-[10px] text-slate-400">每月同一天自動記帳</span></span>
+          <span>🔁 每月固定<span class="block text-[12.5px] text-slate-400">每月同一天自動記帳</span></span>
         </label>
         <label class="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-200">
           <input type="checkbox" id="optTemplate" class="w-4 h-4 accent-amber-400" />
-          <span>⭐ 加入常用<span class="block text-[10px] text-slate-400">首頁一鍵記帳</span></span>
+          <span>⭐ 加入常用<span class="block text-[12.5px] text-slate-400">首頁一鍵記帳</span></span>
         </label>
       </div>
 
@@ -738,10 +738,10 @@
               <button onclick="changeCatIcon(${ci})" aria-label="更換圖示" class="w-10 h-10 shrink-0 rounded-full bg-slate-800 border border-slate-700 text-lg active-scale">${catIcon(cat)}</button>
               <div class="flex-1 min-w-0">
                 <div class="text-sm font-bold text-white truncate">${esc(cat)}</div>
-                <div class="text-[10px] text-slate-500">${subs.length} 個細項</div>
+                <div class="text-[12.5px] text-slate-500">${subs.length} 個細項</div>
               </div>
-              <button onclick="renameMainCat(${ci})" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-300">改名</button>
-              <button onclick="deleteMainCat(${ci})" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-rose-400">刪除</button>
+              <button onclick="renameMainCat(${ci})" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[13.75px] text-slate-300">改名</button>
+              <button onclick="deleteMainCat(${ci})" class="px-2.5 py-1.5 rounded-lg bg-slate-800 border border-slate-700 text-[13.75px] text-rose-400">刪除</button>
             </div>
             <div class="flex flex-wrap gap-1.5">
               ${subs.map((sub, si) => `
@@ -908,8 +908,8 @@
         cardsContainer.insertAdjacentHTML('beforeend', `
           <div class="min-w-[125px] bg-slate-900/90 border border-slate-700/80 rounded-xl p-2.5 shrink-0">
             <div class="flex justify-between items-center">
-              <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${acc.group}</span>
-              <span class="text-[10px] font-bold text-sky-400">${acc.currency}</span>
+              <span class="text-[12.5px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400">${acc.group}</span>
+              <span class="text-[12.5px] font-bold text-sky-400">${acc.currency}</span>
             </div>
             <div class="text-xs font-bold text-slate-200 mt-1.5 truncate">${acc.name}</div>
             <div class="text-sm font-extrabold mt-0.5 ${isCC && bal.gt(0) ? 'text-amber-400' : 'text-white'}">
@@ -967,7 +967,7 @@
                 <li>點下方藍色 <b class="text-sky-400">＋</b> 記第一筆帳；上方可切換支出／收入／轉帳。</li>
                 <li>常買的早餐、通勤可勾選「⭐ 加入常用」，之後首頁點一下就記好。</li>
               </ol>
-              <p class="text-[11px] text-slate-500">資料只存在這支手機裡，記得每月到設定頁下載一次 JSON 備份。</p>
+              <p class="text-[13.75px] text-slate-500">資料只存在這支手機裡，記得每月到設定頁下載一次 JSON 備份。</p>
             </div>`;
         return;
       }
@@ -990,7 +990,7 @@
         html += `
           <div class="flex justify-between items-baseline px-1 pt-2 pb-1">
             <span class="text-xs font-bold text-slate-300">${friendlyDate(g.date)}</span>
-            ${dayExp.gt(0) ? `<span class="text-[11px] text-slate-500">支出 ${formatMoney(dayExp, 'TWD')}</span>` : ''}
+            ${dayExp.gt(0) ? `<span class="text-[13.75px] text-slate-500">支出 ${formatMoney(dayExp, 'TWD')}</span>` : ''}
           </div>
           <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl overflow-hidden divide-y divide-slate-700/60">`;
         g.items.forEach(tx => {
@@ -1009,7 +1009,7 @@
               </span>
               <span class="text-right shrink-0">
                 <span class="block text-sm font-extrabold ${colorClass}">${prefix}${formatMoney(tx.amount, tx.currency)}</span>
-                <span class="block text-[10px] text-slate-500 truncate max-w-[110px]">${esc(tx.note ? accText : '')}</span>
+                <span class="block text-[12.5px] text-slate-500 truncate max-w-[110px]">${esc(tx.note ? accText : '')}</span>
               </span>
             </button>`;
         });
@@ -1261,19 +1261,19 @@
 
       document.getElementById('kpiGrid').innerHTML = `
         <div class="p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80">
-          <span class="text-[11px] text-slate-400 block">區間總收入 (TWD)</span>
+          <span class="text-[13.75px] text-slate-400 block">區間總收入 (TWD)</span>
           <span class="text-lg font-extrabold text-emerald-400 mt-0.5 block">${formatMoney(totalIncTWD, 'TWD')}</span>
         </div>
         <div class="p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80">
-          <span class="text-[11px] text-slate-400 block">區間總支出 (TWD)</span>
+          <span class="text-[13.75px] text-slate-400 block">區間總支出 (TWD)</span>
           <span class="text-lg font-extrabold text-rose-400 mt-0.5 block">${formatMoney(totalExpTWD, 'TWD')}</span>
         </div>
         <div class="p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80">
-          <span class="text-[11px] text-slate-400 block">淨現金流結餘 ${totalIncTWD.gt(0) ? `(儲蓄率 ${savingsRate}%)` : ''}</span>
+          <span class="text-[13.75px] text-slate-400 block">淨現金流結餘 ${totalIncTWD.gt(0) ? `(儲蓄率 ${savingsRate}%)` : ''}</span>
           <span class="text-lg font-extrabold ${netFlow.gte(0) ? 'text-sky-400' : 'text-amber-400'} mt-0.5 block">${formatMoney(netFlow, 'TWD')}</span>
         </div>
         <div class="p-3.5 rounded-2xl bg-slate-800/90 border border-slate-700/80">
-          <span class="text-[11px] text-slate-400 block">命中筆數 / 平均單筆</span>
+          <span class="text-[13.75px] text-slate-400 block">命中筆數 / 平均單筆</span>
           <span class="text-sm font-extrabold text-white mt-1 block">${matchedTxs.length} 筆 <span class="text-xs font-normal text-slate-400">/ ${formatMoney(avgPerTx, 'TWD')}</span></span>
         </div>
       `;
@@ -1300,19 +1300,19 @@
         listHtml += `
           <button type="button" onclick="openTxDetail('${tx.id}')" class="tx-row w-full text-left bg-slate-800/70 border border-slate-700/60 rounded-xl p-2.5 flex justify-between items-center text-xs">
             <div class="max-w-[70%] space-y-0.5">
-              <div class="font-bold text-slate-200">${catIcon(tx.mainCat)} ${esc(tx.mainCat + subTag)} <span class="text-[10px] font-normal text-slate-400">(${esc(tx.accountName)})</span></div>
-              ${tx.note ? `<div class="text-[11px] text-sky-300 truncate">${esc(tx.note)}</div>` : ''}
-              <div class="text-[10px] text-slate-500">${tx.date}</div>
+              <div class="font-bold text-slate-200">${catIcon(tx.mainCat)} ${esc(tx.mainCat + subTag)} <span class="text-[12.5px] font-normal text-slate-400">(${esc(tx.accountName)})</span></div>
+              ${tx.note ? `<div class="text-[13.75px] text-sky-300 truncate">${esc(tx.note)}</div>` : ''}
+              <div class="text-[12.5px] text-slate-500">${tx.date}</div>
             </div>
             <div class="text-right font-extrabold ${isInc ? 'text-emerald-400' : 'text-rose-400'}">
               ${isInc ? '+' : '-'}${formatMoney(tx.amount, tx.currency)}
-              ${tx.currency !== 'TWD' ? `<div class="text-[10px] font-normal text-slate-400">≈ ${formatMoney(toTWD(tx.amount, tx.currency), 'TWD')}</div>` : ''}
+              ${tx.currency !== 'TWD' ? `<div class="text-[12.5px] font-normal text-slate-400">≈ ${formatMoney(toTWD(tx.amount, tx.currency), 'TWD')}</div>` : ''}
             </div>
           </button>
         `;
       });
       if (matchedTxs.length > shown.length) {
-        listHtml += `<p class="text-center text-[11px] text-slate-500 py-2">只顯示最新 ${shown.length} 筆，完整 ${matchedTxs.length} 筆請用「匯出 Excel 報表」</p>`;
+        listHtml += `<p class="text-center text-[13.75px] text-slate-500 py-2">只顯示最新 ${shown.length} 筆，完整 ${matchedTxs.length} 筆請用「匯出 Excel 報表」</p>`;
       }
       matchListEl.innerHTML = listHtml;
     }
@@ -1365,7 +1365,7 @@
       const sortedEntries = [...chartEntries, ...otherEntries]; // 清單顏色與圓餅圖一致
 
       document.getElementById('doughnutCenter').innerHTML = `
-        <span class="text-[11px] text-slate-400">${chartIncome ? '總收入' : '總支出'}</span>
+        <span class="text-[13.75px] text-slate-400">${chartIncome ? '總收入' : '總支出'}</span>
         <span class="text-lg font-extrabold ${chartIncome ? 'text-emerald-400' : 'text-rose-400'}">${formatMoney(chartIncome ? totalIncTWD : totalExpTWD, 'TWD')}</span>`;
 
       const labels = chartEntries.map(e => e[0]);
@@ -1406,7 +1406,7 @@
         const barColor = CHART_PALETTE[idx % CHART_PALETTE.length];
         const subBadges = Object.entries(data.subs)
           .sort((a, b) => b[1].minus(a[1]).toNumber())
-          .map(([sName, sVal]) => `<span class="text-[11px] bg-slate-900 px-2 py-0.5 rounded text-slate-300 border border-slate-700">${sName}: ${formatMoney(sVal, 'TWD')}</span>`)
+          .map(([sName, sVal]) => `<span class="text-[13.75px] bg-slate-900 px-2 py-0.5 rounded text-slate-300 border border-slate-700">${sName}: ${formatMoney(sVal, 'TWD')}</span>`)
           .join('');
 
         container.insertAdjacentHTML('beforeend', `
@@ -1627,7 +1627,7 @@
         const isSel = cat === selectedMainCat;
         grid.insertAdjacentHTML('beforeend', `
           <button type="button" onclick="selectMainCategory('${cat}')"
-            class="py-1.5 px-0.5 rounded-xl text-[11px] font-bold text-center border flex flex-col items-center gap-0.5 ${isSel ? selColor : 'bg-slate-800 border-slate-700 text-slate-300'}">
+            class="py-1.5 px-0.5 rounded-xl text-[13.75px] font-bold text-center border flex flex-col items-center gap-0.5 ${isSel ? selColor : 'bg-slate-800 border-slate-700 text-slate-300'}">
             <span class="text-lg leading-none">${catIcon(cat)}</span>
             <span class="truncate w-full">${cat}</span>
           </button>
@@ -1900,7 +1900,7 @@
         card.innerHTML = `
           <div class="text-right -mt-2 px-1">
             <button onclick="openTab('settings');setTimeout(()=>document.getElementById('budgetSection').scrollIntoView({behavior:'smooth'}),50)"
-              class="text-[11px] text-slate-500">🎯 設定預算（選用）→</button>
+              class="text-[13.75px] text-slate-500">🎯 設定預算（選用）→</button>
           </div>`;
         return;
       }
@@ -1919,10 +1919,10 @@
           <div class="space-y-1.5">
             <div class="flex justify-between items-baseline">
               <span class="text-xs font-bold text-white">🎯 本月預算</span>
-              <span class="text-[11px] text-slate-400">${formatMoney(total)} / ${formatMoney(totalLimit)}</span>
+              <span class="text-[13.75px] text-slate-400">${formatMoney(total)} / ${formatMoney(totalLimit)}</span>
             </div>
             <div class="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden"><div class="h-full rounded-full" style="width:${b.width}%;background:${b.color}"></div></div>
-            <div class="flex justify-between text-[11px]">
+            <div class="flex justify-between text-[13.75px]">
               <span style="color:${b.color}" class="font-bold">${remain.gte(0) ? `還剩 ${formatMoney(remain)}` : `已超支 ${formatMoney(remain.abs())}`}</span>
               <span class="text-slate-400">${remain.gt(0) ? `剩 ${daysLeft} 天・每天可花 ${formatMoney(perDay.toDecimalPlaces(0))}` : `剩 ${daysLeft} 天`}</span>
             </div>
@@ -1941,7 +1941,7 @@
         catRows.forEach(r => {
           html += `
             <div>
-              <div class="flex justify-between text-[11px] mb-1">
+              <div class="flex justify-between text-[13.75px] mb-1">
                 <span class="text-slate-200">${catIcon(r.cat)} ${esc(r.cat)}</span>
                 <span style="color:${r.b.pct >= 80 ? r.b.color : '#94a3b8'}">${formatMoney(r.spent)} / ${formatMoney(r.limit)}</span>
               </div>
@@ -2045,7 +2045,7 @@
     function renderRecurringSettings() {
       const box = document.getElementById('recurringList');
       if (!recurrings.length) {
-        box.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">尚未設定。記帳時勾選「🔁 每月固定」即可新增。</p>`;
+        box.innerHTML = `<p class="text-[13.75px] text-slate-500 text-center py-2">尚未設定。記帳時勾選「🔁 每月固定」即可新增。</p>`;
         return;
       }
       box.innerHTML = recurrings.map((rc, i) => `
@@ -2053,12 +2053,12 @@
           <span class="w-9 h-9 shrink-0 rounded-full bg-slate-800 flex items-center justify-center text-base">${catIcon(rc.mainCat)}</span>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold text-white truncate">${esc(rc.subCat || rc.mainCat)}${rc.note ? ` <span class="text-xs font-normal text-slate-400">${esc(rc.note)}</span>` : ''}</div>
-            <div class="text-[11px] text-slate-400 truncate">每月 ${rc.day} 日・${formatMoney(rc.amount, (accounts.find(a => a.id === rc.accountId) || {}).currency || 'TWD', true)}・${rcDescribe(rc)}</div>
+            <div class="text-[13.75px] text-slate-400 truncate">每月 ${rc.day} 日・${formatMoney(rc.amount, (accounts.find(a => a.id === rc.accountId) || {}).currency || 'TWD', true)}・${rcDescribe(rc)}</div>
           </div>
           <div class="flex flex-col gap-1 shrink-0">
-            <button onclick="editRecurringAmount(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] text-slate-300">改金額</button>
-            <button onclick="toggleRecurring(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] ${rc.active ? 'text-amber-300' : 'text-emerald-300'}">${rc.active ? '暫停' : '啟用'}</button>
-            <button onclick="deleteRecurring(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] text-rose-400">刪除</button>
+            <button onclick="editRecurringAmount(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12.5px] text-slate-300">改金額</button>
+            <button onclick="toggleRecurring(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12.5px] ${rc.active ? 'text-amber-300' : 'text-emerald-300'}">${rc.active ? '暫停' : '啟用'}</button>
+            <button onclick="deleteRecurring(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12.5px] text-rose-400">刪除</button>
           </div>
         </div>`).join('');
     }
@@ -2107,7 +2107,7 @@
           <button onclick="useTemplate(${i})" class="shrink-0 flex items-center gap-1.5 pl-2 pr-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 active-scale">
             <span class="text-base leading-none">${catIcon(tp.mainCat)}</span>
             <span class="text-xs font-bold text-slate-100">${esc(tp.name)}</span>
-            <span class="text-[11px] font-bold ${color}">${formatMoney(tp.amount, acc ? acc.currency : 'TWD')}</span>
+            <span class="text-[13.75px] font-bold ${color}">${formatMoney(tp.amount, acc ? acc.currency : 'TWD')}</span>
           </button>`;
       }).join('');
     }
@@ -2125,7 +2125,7 @@
     function renderTemplateSettings() {
       const box = document.getElementById('templateList');
       if (!templates.length) {
-        box.innerHTML = `<p class="text-[11px] text-slate-500 text-center py-2">尚未設定。記帳時勾選「⭐ 加入常用記帳」即可新增。</p>`;
+        box.innerHTML = `<p class="text-[13.75px] text-slate-500 text-center py-2">尚未設定。記帳時勾選「⭐ 加入常用記帳」即可新增。</p>`;
         return;
       }
       box.innerHTML = templates.map((tp, i) => `
@@ -2133,12 +2133,12 @@
           <span class="w-9 h-9 shrink-0 rounded-full bg-slate-800 flex items-center justify-center text-base">${catIcon(tp.mainCat)}</span>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold text-white truncate">${esc(tp.name)}</div>
-            <div class="text-[11px] text-slate-400 truncate">${formatMoney(tp.amount, (accounts.find(a => a.id === tp.accountId) || {}).currency || 'TWD', true)}・${esc(tp.mainCat)}${tp.subCat ? '・' + esc(tp.subCat) : ''}・${rcDescribe(tp)}</div>
+            <div class="text-[13.75px] text-slate-400 truncate">${formatMoney(tp.amount, (accounts.find(a => a.id === tp.accountId) || {}).currency || 'TWD', true)}・${esc(tp.mainCat)}${tp.subCat ? '・' + esc(tp.subCat) : ''}・${rcDescribe(tp)}</div>
           </div>
           <div class="flex gap-1 shrink-0">
-            ${i > 0 ? `<button onclick="moveTemplate(${i},-1)" class="w-8 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[11px] text-slate-300">↑</button>` : ''}
-            <button onclick="editTemplate(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] text-slate-300">修改</button>
-            <button onclick="deleteTemplate(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[10px] text-rose-400">刪除</button>
+            ${i > 0 ? `<button onclick="moveTemplate(${i},-1)" class="w-8 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[13.75px] text-slate-300">↑</button>` : ''}
+            <button onclick="editTemplate(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12.5px] text-slate-300">修改</button>
+            <button onclick="deleteTemplate(${i})" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-[12.5px] text-rose-400">刪除</button>
           </div>
         </div>`).join('');
     }
