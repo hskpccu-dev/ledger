@@ -2543,9 +2543,18 @@
     });
 
     // 註冊 Service Worker（離線可用）並請求持久化儲存
+    // 同時主動偵測新版本：一偵測到就自動重新整理，不用再手動關閉 App
     if ('serviceWorker' in navigator) {
+      let swRefreshed = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (swRefreshed) return;
+        swRefreshed = true;
+        window.location.reload();
+      });
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW 註冊失敗', err));
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+          reg.update().catch(() => {}); // 強制立即檢查新版本，不等瀏覽器預設的檢查週期
+        }).catch(err => console.warn('SW 註冊失敗', err));
       });
     }
     if (navigator.storage && navigator.storage.persist) {

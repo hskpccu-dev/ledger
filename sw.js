@@ -1,6 +1,6 @@
 // 私人金流帳本 Service Worker
 // 修改 index.html 後，把版本號 +1，iPhone 重開 App 就會抓到新版
-const CACHE_NAME = 'ledger-v13';
+const CACHE_NAME = 'ledger-v14';
 
 const LOCAL_FILES = [
   './',
@@ -22,7 +22,13 @@ const CDN_FILES = [
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(LOCAL_FILES);
+    // 逐一用 no-store 抓取本機檔案，避免拿到手機 HTTP 快取裡的舊版本
+    await Promise.all(LOCAL_FILES.map(async url => {
+      try {
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) await cache.put(url, res);
+      } catch (e) { /* 單一檔失敗不影響安裝，之後執行時會再快取 */ }
+    }));
     // CDN 檔以 no-cors 抓取（opaque response 無法用 addAll，需手動 put）
     await Promise.all(CDN_FILES.map(async url => {
       try {
@@ -46,11 +52,11 @@ self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
 
-  // 主頁面：網路優先（有網路就拿最新版），離線時用快取
+  // 主頁面：網路優先（有網路就拿最新版，強制略過 HTTP 快取避免拿到舊頁面），離線時用快取
   if (req.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(req);
+        const fresh = await fetch(req, { cache: 'no-store' });
         if (fresh.ok) { // 只快取正常的頁面，避免把錯誤頁存起來
           const cache = await caches.open(CACHE_NAME);
           cache.put('./index.html', fresh.clone());
