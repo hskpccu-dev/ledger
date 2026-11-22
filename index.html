@@ -463,18 +463,38 @@
     // ==========================================
     const DEFAULT_ACCOUNTS = [
       { id: 'acc_twd', name: '台幣現金', group: '現金', currency: 'TWD', balance: '0' },
-      { id: 'acc_jpy', name: '日幣現金', group: '現金', currency: 'JPY', balance: '0' },
-      { id: 'acc_usd', name: '美金現金', group: '現金', currency: 'USD', balance: '0' },
-      { id: 'acc_cny', name: '人民幣現金', group: '現金', currency: 'CNY', balance: '0' },
-      { id: 'acc_ctbc', name: '中信銀行', group: '銀行帳戶', currency: 'TWD', balance: '0' },
+      { id: 'acc_ctbc', name: '中國信託', group: '銀行帳戶', currency: 'TWD', balance: '0' },
       { id: 'acc_fubon', name: '富邦銀行', group: '銀行帳戶', currency: 'TWD', balance: '0' },
       { id: 'acc_cathay', name: '國泰世華', group: '銀行帳戶', currency: 'TWD', balance: '0' },
       { id: 'acc_cc_ctbc', name: '中信Line Pay卡', group: '信用卡', currency: 'TWD', balance: '0' },
       { id: 'acc_cc_fubon', name: '富邦Costco卡', group: '信用卡', currency: 'TWD', balance: '0' },
       { id: 'acc_cc_dbs', name: '星展Eco卡', group: '信用卡', currency: 'TWD', balance: '0' },
       { id: 'acc_easycard', name: '悠遊卡', group: '電子支付', currency: 'TWD', balance: '0' },
-      { id: 'acc_linepay', name: 'Line Pay', group: '電子支付', currency: 'TWD', balance: '0' }
+      { id: 'acc_linepay', name: 'Line Point', group: '電子支付', currency: 'TWD', balance: '0' }
     ];
+
+    // 一次性帳戶遷移：2026-11-22 使用者要求刪除日幣/美金/人民幣現金帳戶，
+    // 並將「中信銀行」改名「中國信託」、「Line Pay」改名「Line Point」
+    // （含歷史交易紀錄上顯示的帳戶名稱，一併更新，確保帳本上下一致）。
+    // 只對「已經在手機上有資料」的舊使用者生效一次；全新安裝直接套用上面的 DEFAULT_ACCOUNTS。
+    function migrateAccountsRemoveForeignCashRename(accts, txs) {
+      if (localStorage.getItem('pl_migration_2026_11_22') === '1') return accts;
+      const RENAME_MAP = { '中信銀行': '中國信託', 'Line Pay': 'Line Point' };
+      const removeIds = ['acc_jpy', 'acc_usd', 'acc_cny'];
+      accts = accts.filter(a => !removeIds.includes(a.id));
+      accts.forEach(a => {
+        if (a.id === 'acc_ctbc') a.name = '中國信託';
+        if (a.id === 'acc_linepay') a.name = 'Line Point';
+      });
+      (txs || []).forEach(t => {
+        if (RENAME_MAP[t.accountName]) t.accountName = RENAME_MAP[t.accountName];
+        if (RENAME_MAP[t.targetAccountName]) t.targetAccountName = RENAME_MAP[t.targetAccountName];
+      });
+      localStorage.setItem('pl_accounts', JSON.stringify(accts));
+      localStorage.setItem('pl_transactions', JSON.stringify(txs || []));
+      localStorage.setItem('pl_migration_2026_11_22', '1');
+      return accts;
+    }
 
     const DEFAULT_EXPENSE_CATEGORIES = {
       '餐飲美食': ['早餐', '午餐', '晚餐', '宵夜', '咖啡', '手搖飲', '聚餐'],
@@ -560,8 +580,9 @@
 
     let currentType = 'expense';
     if (!Array.isArray(accounts) || accounts.length === 0) accounts = DEFAULT_ACCOUNTS;
+    accounts = migrateAccountsRemoveForeignCashRename(accounts, transactions);
     let selectedAccountId = accounts[0].id;
-    let selectedTargetAccountId = (accounts[4] || accounts[accounts.length - 1]).id;
+    let selectedTargetAccountId = (accounts.find(a => a.id === 'acc_ctbc') || accounts[accounts.length - 1]).id;
     let selectedMainCat = Object.keys(EXPENSE_CATEGORIES)[0];
     let selectedSubCat = '';
     let html5QrCode = null;
